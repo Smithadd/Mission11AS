@@ -1,0 +1,6 @@
+# Ignore Visual Studio and build files
+.vs/
+bin/
+obj/
+node_modules/
+.env
