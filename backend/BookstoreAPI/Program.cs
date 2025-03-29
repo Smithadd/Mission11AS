@@ -7,9 +7,9 @@ var builder = WebApplication.CreateBuilder(args);
 // Add CORS policy
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAllOrigins", policy =>
+    options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.AllowAnyOrigin()      // Allow all origins (you can customize this if needed)
+        policy.WithOrigins("http://localhost:5173")  // Allow Vite dev server (replace if Vite runs on a different port)
               .AllowAnyMethod()     // Allow any HTTP method (GET, POST, etc.)
               .AllowAnyHeader();    // Allow any header
     });
@@ -27,8 +27,8 @@ builder.Services.AddDbContext<BookstoreContext>(options =>
 
 var app = builder.Build();
 
-// Enable CORS globally
-app.UseCors("AllowAllOrigins");  // This ensures CORS policy is applied to all requests
+// Enable CORS globally for the frontend (Vite development server)
+app.UseCors("AllowFrontend");  // Apply the "AllowFrontend" policy to all requests
 
 // Enable HTTPS Redirection
 app.UseHttpsRedirection();

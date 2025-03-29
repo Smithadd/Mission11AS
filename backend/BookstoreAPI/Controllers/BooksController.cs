@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BookstoreAPI.Models;
 
@@ -17,16 +17,25 @@ namespace BookstoreAPI.Controllers
 
         // GET: api/Books
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Book>>> GetBooks([FromQuery] int page = 1, [FromQuery] int pageSize = 5)
+        public async Task<ActionResult<IEnumerable<Book>>> GetBooks(
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 5,
+            [FromQuery] string? category = null)
         {
-            // Calculate the number of books to skip
-            var totalBooks = await _context.Books.CountAsync();
-            var books = await _context.Books
-                .Skip((page - 1) * pageSize)   // Skip the books based on the current page and page size
-                .Take(pageSize)                // Take the number of books specified by page size
+            var query = _context.Books.AsQueryable();
+
+            // Filter by category if provided
+            if (!string.IsNullOrEmpty(category) && category != "All")
+            {
+                query = query.Where(b => b.Category == category);
+            }
+
+            var totalBooks = await query.CountAsync();
+            var books = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync();
 
-            // Return paginated result with total count for client-side pagination
             return Ok(new { books, totalBooks });
         }
 
@@ -42,6 +51,19 @@ namespace BookstoreAPI.Controllers
             }
 
             return book;
+        }
+
+        // GET: api/Books/categories
+        // Endpoint to get unique categories
+        [HttpGet("categories")]
+        public async Task<ActionResult<IEnumerable<string>>> GetCategories()
+        {
+            var categories = await _context.Books
+                .Select(b => b.Category)
+                .Distinct()
+                .ToListAsync();
+
+            return Ok(categories);
         }
     }
 }

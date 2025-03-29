@@ -10,18 +10,37 @@ export interface PaginatedBooks {
   totalBooks: number; // Total number of books in the database
 }
 
+// Add a new interface for categories
+export type Categories = string[]; // Array of category names
+
+// Function to fetch books with pagination and optional category filter
 export const getBooks = async (
   page: number = 1,
-  pageSize: number = 5
+  pageSize: number = 5,
+  category?: string // Optional category filter
 ): Promise<PaginatedBooks> => {
   try {
-    // Make the GET request to the backend with pagination parameters
-    const response = await axios.get<PaginatedBooks>(
-      `${API_URL}/books?page=${page}&pageSize=${pageSize}`
-    );
-    return response.data; // This should return both books and totalBooks
+    // Build query parameters
+    let url = `${API_URL}/books?page=${page}&pageSize=${pageSize}`;
+    if (category) {
+      url += `&category=${encodeURIComponent(category)}`; // Append category if provided
+    }
+
+    const response = await axios.get<PaginatedBooks>(url);
+    return response.data;
   } catch (error) {
     console.error("Error fetching books:", error);
-    throw error; // Handle the error as needed
+    throw error;
+  }
+};
+
+// Function to fetch categories from the backend API
+export const getCategories = async (): Promise<Categories> => {
+  try {
+    const response = await axios.get<Categories>(`${API_URL}/books/categories`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching categories:", error);
+    throw error;
   }
 };

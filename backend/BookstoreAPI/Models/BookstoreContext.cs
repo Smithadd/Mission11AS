@@ -1,38 +1,44 @@
-﻿using System;
-using System.Collections.Generic;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
-namespace BookstoreAPI.Models;
-
-public partial class BookstoreContext : DbContext
+namespace BookstoreAPI.Models
 {
-    public BookstoreContext()
+    public partial class BookstoreContext : DbContext
     {
-    }
+        private readonly IConfiguration _configuration;
 
-    public BookstoreContext(DbContextOptions<BookstoreContext> options)
-        : base(options)
-    {
-    }
-
-    public virtual DbSet<Book> Books { get; set; }
-
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlite("Data Source=Bookstore.sqlite");
-
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
-    {
-        modelBuilder.Entity<Book>(entity =>
+        // Constructor with configuration injection
+        public BookstoreContext(DbContextOptions<BookstoreContext> options, IConfiguration configuration)
+            : base(options)
         {
-            entity.HasIndex(e => e.BookId, "IX_Books_BookID").IsUnique();
+            _configuration = configuration;
+        }
 
-            entity.Property(e => e.BookId).HasColumnName("BookID");
-            entity.Property(e => e.Isbn).HasColumnName("ISBN");
-        });
+        public virtual DbSet<Book> Books { get; set; }
 
-        OnModelCreatingPartial(modelBuilder);
+        // OnConfiguring to read from the configuration file
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            if (!optionsBuilder.IsConfigured)
+            {
+                // Use configuration to get the connection string
+                optionsBuilder.UseSqlite(_configuration.GetConnectionString("DefaultConnection"));
+            }
+        }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Book>(entity =>
+            {
+                entity.HasIndex(e => e.BookId, "IX_Books_BookID").IsUnique();
+
+                entity.Property(e => e.BookId).HasColumnName("BookID");
+                entity.Property(e => e.Isbn).HasColumnName("ISBN");
+            });
+
+            OnModelCreatingPartial(modelBuilder);
+        }
+
+        partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
     }
-
-    partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
 }
