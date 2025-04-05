@@ -9,7 +9,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("https://black-sea-0a94be71e.6.azurestaticapps.net/")  // Allow Vite dev server (replace if Vite runs on a different port)
+        policy.WithOrigins("https://black-sea-0a94be71e.6.azurestaticapps.net")  // Allow Vite dev server (replace if Vite runs on a different port)
               .AllowAnyMethod()     // Allow any HTTP method (GET, POST, etc.)
               .AllowAnyHeader();    // Allow any header
     });
