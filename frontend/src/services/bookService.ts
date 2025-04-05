@@ -1,7 +1,8 @@
 import axios from "axios";
 import { Book } from "../types";
 
-const API_URL = "https://localhost:5001/api";
+const API_URL =
+  "https://bookstoreappbackend-dse8cpd0axcshqbz.westus-01.azurewebsites.net/api";
 
 // Response structure for paginated books
 export interface PaginatedBooks {
