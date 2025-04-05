@@ -2,9 +2,13 @@ import React, { useEffect, useState } from "react";
 import {
   getBooks,
   getCategories,
+  createBook,
+  updateBook,
+  deleteBook,
   PaginatedBooks,
 } from "../services/bookService";
 import { Book } from "../types";
+import BookFormModal from "./BookFormModal";
 import {
   Table,
   Pagination,
@@ -26,6 +30,20 @@ const BookList: React.FC = () => {
   const [categories, setCategories] = useState<string[]>([]);
   const [cart, setCart] = useState<any[]>([]);
   const [cartVisible, setCartVisible] = useState(false);
+
+  const [showModal, setShowModal] = useState(false);
+  const [editingBook, setEditingBook] = useState<Book | null>(null);
+  const [formBook, setFormBook] = useState<Book>({
+    bookId: 0,
+    title: "",
+    author: "",
+    publisher: "",
+    price: 0,
+    category: "",
+    isbn: "",
+    classification: "",
+    pageCount: 0,
+  });
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -87,6 +105,51 @@ const BookList: React.FC = () => {
     return { totalItems, totalCost };
   };
 
+  const openCreateModal = () => {
+    setEditingBook(null);
+    setFormBook({
+      bookId: 0,
+      title: "",
+      author: "",
+      publisher: "",
+      price: 0,
+      category: "",
+      isbn: "",
+      classification: "",
+      pageCount: 0,
+    });
+    setShowModal(true);
+  };
+
+  const handleSaveBook = async () => {
+    if (editingBook) {
+      await updateBook(editingBook.bookId, formBook);
+    } else {
+      await createBook(formBook);
+    }
+    setShowModal(false);
+    fetchBooks();
+  };
+
+  const handleEditClick = (book: Book) => {
+    setEditingBook(book);
+    setFormBook(book);
+    setShowModal(true);
+  };
+
+  const handleDeleteClick = async (bookId: number) => {
+    await deleteBook(bookId);
+    fetchBooks();
+  };
+
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormBook((prev) => ({
+      ...prev,
+      [name]: name === "price" || name === "pageCount" ? Number(value) : value,
+    }));
+  };
+
   const { totalItems, totalCost } = getCartSummary();
 
   return (
@@ -103,6 +166,11 @@ const BookList: React.FC = () => {
                   </option>
                 ))}
               </Form.Select>
+            </Col>
+            <Col md={4} className="text-end">
+              <Button variant="primary" onClick={openCreateModal}>
+                Add Book
+              </Button>
             </Col>
           </Row>
 
@@ -139,6 +207,21 @@ const BookList: React.FC = () => {
                       className="me-2"
                     >
                       Add to Cart
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="warning"
+                      onClick={() => handleEditClick(book)}
+                      className="me-2"
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="danger"
+                      onClick={() => handleDeleteClick(book.bookId)}
+                    >
+                      Delete
                     </Button>
                   </td>
                 </tr>
@@ -215,6 +298,15 @@ const BookList: React.FC = () => {
           </Card>
         </Col>
       </Row>
+
+      <BookFormModal
+        show={showModal}
+        onHide={() => setShowModal(false)}
+        onSubmit={handleSaveBook}
+        book={formBook}
+        onChange={handleFormChange}
+        isEditing={!!editingBook}
+      />
     </div>
   );
 };
